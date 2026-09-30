@@ -179,3 +179,20 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .bg-blob, .word { animation-iteration-count: 1; }
 }
+
+.mute {
+  position: absolute;
+  top: 2vmin;
+  right: 2vmin;
+  z-index: 5;
+  font-size: 1.6rem;
+  background: rgba(255, 255, 255, 0.6);
+  border: 0;
+  border-radius: 50%;
+  width: 3rem;
+  height: 3rem;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+.mute:hover { opacity: 1; }

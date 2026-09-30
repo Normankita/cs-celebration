@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Confetti from "./Confetti.jsx";
+import * as sound from "./sound.js";
 
 // ---- Easy settings ---------------------------------------------------------
 const COUNTDOWN_SECONDS = 10;
-const TITLE = "Week of Customer Care";
+const TITLE = "Customer Care Week";
 const CELEBRATION_MESSAGE = "Let the celebration begin!";
 const SUBTITLE = "Thank you for putting our customers first";
 // -----------------------------------------------------------------------------
@@ -14,9 +15,11 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 export default function App() {
   const [phase, setPhase] = useState("idle"); // idle | counting | celebrate
   const [count, setCount] = useState(COUNTDOWN_SECONDS);
+  const [muted, setMuted] = useState(false);
   const timer = useRef(null);
 
   const start = useCallback(() => {
+    sound.unlock();
     clearInterval(timer.current);
     setCount(COUNTDOWN_SECONDS);
     setPhase("counting");
@@ -38,6 +41,14 @@ export default function App() {
     setCount(COUNTDOWN_SECONDS);
   }, []);
 
+  const toggleMute = useCallback(() => {
+    sound.unlock();
+    setMuted((m) => {
+      sound.setMuted(!m);
+      return !m;
+    });
+  }, []);
+
   const toggleFullscreen = useCallback(() => {
     if (document.fullscreenElement) document.exitFullscreen();
     else document.documentElement.requestFullscreen?.();
@@ -51,17 +62,26 @@ export default function App() {
         else if (phase === "celebrate") start();
       } else if (e.key.toLowerCase() === "r" || e.key === "Escape") reset();
       else if (e.key.toLowerCase() === "f") toggleFullscreen();
+      else if (e.key.toLowerCase() === "m") toggleMute();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [phase, start, reset, toggleFullscreen]);
+  }, [phase, start, reset, toggleFullscreen, toggleMute]);
 
   useEffect(() => () => clearInterval(timer.current), []);
+
+  useEffect(() => {
+    if (phase === "counting") sound.tick(count);
+    else if (phase === "celebrate") sound.celebrate();
+  }, [phase, count]);
 
   const progress = phase === "counting" ? (COUNTDOWN_SECONDS - count) / COUNTDOWN_SECONDS : 0;
 
   return (
     <main className={`stage phase-${phase}`}>
+      <button className="mute" onClick={toggleMute} aria-label={muted ? "Unmute" : "Mute"}>
+        {muted ? "🔇" : "🔊"}
+      </button>
       <div className="bg-blob blob-a" />
       <div className="bg-blob blob-b" />
       <div className="bg-blob blob-c" />
@@ -73,7 +93,7 @@ export default function App() {
           <button className="btn" onClick={start}>
             Start the countdown
           </button>
-          <p className="hint">Space / Enter to start · F fullscreen · R reset</p>
+          <p className="hint">Space / Enter to start · F fullscreen · M mute · R reset</p>
         </section>
       )}
 
