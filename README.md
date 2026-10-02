@@ -1,4 +1,4 @@
-# Customer Care Week – Countdown
+# Door to Door Campaign – Countdown
 
 A full-screen countdown (10 → 0) that ends in an animated confetti celebration.
 Brand colors: `#26A9E0` · `#8BC53F` · `#929497`.
@@ -16,6 +16,8 @@ npm run build && npm run preview   # production build
 - **Space / Enter** – start (or replay after the celebration)
 - **R / Esc** – reset
 - **F** – fullscreen
+- **T** – switch light / dark theme (remembered; defaults to the device setting)
+- **M** – mute / unmute
 
 ## Customize
 
