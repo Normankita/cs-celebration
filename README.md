@@ -21,7 +21,7 @@ npm run build && npm run preview   # production build
 
 ## Customize
 
-Edit the constants at the top of `src/App.jsx` (`COUNTDOWN_SECONDS`, `TITLE`, `CELEBRATION_MESSAGE`, `SUBTITLE`).
+Edit the constants at the top of `src/App.jsx` (`TOTAL_SECONDS`, `FINAL_SECONDS`, `TITLE`, `CELEBRATION_MESSAGE`, `SUBTITLE`).
 
 ## Launch sequence
 - `TOTAL_SECONDS` (30) is the whole run; the last `FINAL_SECONDS` (10) show the big number, pips and engine rumble. Everything before that is the photo montage.
