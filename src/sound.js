@@ -83,6 +83,22 @@ export function tick() {
   pip(0.1);
 }
 
+// Pre-countdown beep. p runs 0 -> 1 across the montage: it starts low, soft and sparse, then gets
+// higher, louder and more frequent (1 -> 2 -> 4 beeps a second) until it hands over to the pips.
+export function beep(p) {
+  if (!ctx) return;
+  p = Math.min(1, Math.max(0, p));
+  const offsets = p < 0.5 ? [0] : p < 0.8 ? [0, 0.5] : [0, 0.25, 0.5, 0.75];
+  offsets.forEach((o, i) => {
+    const q = Math.min(1, p + i * 0.01);
+    tone(420 + q * 520, o, 0.07 + q * 0.03, {
+      type: "sine",
+      gain: (0.07 + q * 0.3) * (o === 0 ? 1 : 0.7),
+      attack: 0.004,
+    });
+  });
+}
+
 // The long pip at zero, the rocket's liftoff roar, then a rising crowd cheer under the fireworks.
 export function celebrate() {
   if (!ctx) return;

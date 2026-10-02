@@ -45,8 +45,12 @@
 .phase-counting .bg-blob { opacity: 0; }
 
 /* ---------- launch HUD ---------- */
-.intro-pill {
+@keyframes pillIn { from { opacity: 0; transform: translate(-50%, -3vmin); } }
+
+/* ---------- the dial: docked on the right during the montage, glides to the middle for the final 10 ---------- */
+.top-pill {
   position: fixed;
+  z-index: 3;
   top: 3vmin;
   left: 50%;
   transform: translateX(-50%);
@@ -54,9 +58,28 @@
   font-size: clamp(0.9rem, 2.4vmin, 1.6rem);
   animation: pillIn 0.9s both;
 }
-@keyframes pillIn { from { opacity: 0; transform: translate(-50%, -3vmin); } }
-.counting .ring-wrap { width: min(54vmin, 560px); }
-.counting .number { font-size: min(35vmin, 350px); }
+.dial {
+  position: fixed;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 1em;
+  height: 1em;
+  margin: -0.5em 0 0 -0.5em; /* centre on left/top without a transform (the rumble uses transform) */
+  transition:
+    font-size 1.1s cubic-bezier(.65, 0, .25, 1),
+    left 1.1s cubic-bezier(.65, 0, .25, 1),
+    top 1.1s cubic-bezier(.65, 0, .25, 1);
+}
+.dial.docked { font-size: min(21vmin, 240px); left: calc(100% - 15vmin); top: 38%; animation: dialIn 0.9s cubic-bezier(.2,.8,.2,1) both; }
+.dial.center-dial { font-size: min(54vmin, 560px); left: 50%; top: 50%; }
+@keyframes dialIn { from { opacity: 0; scale: 0.6; } }
+.dial .number {
+  font-size: 0.5em;
+  transition: font-size 1.1s cubic-bezier(.65, 0, .25, 1);
+}
+.dial.center-dial .number { font-size: 0.66em; }
+.dial .ring-bg, .dial .ring-fg { stroke-width: 16; }
 
 .hud {
   position: fixed;
@@ -128,7 +151,7 @@
 
 /* ---------- final-10 rumble + pulsing edge glow ---------- */
 .stage.final .cinematic,
-.stage.final .counting { animation: rumble 0.09s linear infinite; }
+.stage.final .dial { animation: rumble 0.09s linear infinite; }
 @keyframes rumble {
   0%, 100% { transform: translate(calc(var(--amp) * 1px), calc(var(--amp) * -0.6px)) scale(1.03); }
   25% { transform: translate(calc(var(--amp) * -1px), calc(var(--amp) * 0.8px)) scale(1.03); }
@@ -212,6 +235,12 @@
 .celebrate-card { animation: cardIn 0.9s var(--lift, 0s) both; }
 
 @media (prefers-reduced-motion: reduce) {
-  .stage.final .cinematic, .stage.final .counting { animation: none; }
+  .stage.final .cinematic, .stage.final .dial { animation: none; }
   .scene-main { transition: none; }
 }
+
+/* dark theme: the montage photos are bright, so give the small glass panels a darker tint to stay readable */
+:root[data-theme="dark"] .top-pill,
+:root[data-theme="dark"] .hud,
+:root[data-theme="dark"] .dial .ring-glass { background: rgba(8, 20, 32, 0.55); }
+:root[data-theme="dark"] .top-pill { color: var(--text); }

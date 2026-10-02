@@ -106,11 +106,15 @@ export default function App() {
   useEffect(() => () => clearInterval(timer.current), []);
 
   const final = phase === "counting" && count <= FINAL_SECONDS;
+  // the dial leaves its dock one second early so it arrives in the middle just as "10" lands
+  const centered = phase === "counting" && count <= FINAL_SECONDS + 1;
 
-  // BBC-style pips and the building engine rumble only in the final countdown.
+  // Soft beeps that build through the montage, then the BBC-style pips and engine rumble.
   useEffect(() => {
+    if (phase !== "counting") return;
     if (final) sound.tick();
-    if (phase === "counting" && count === FINAL_SECONDS) sound.startRumble(FINAL_SECONDS);
+    else sound.beep((TOTAL_SECONDS - count) / (TOTAL_SECONDS - FINAL_SECONDS - 1));
+    if (count === FINAL_SECONDS) sound.startRumble(FINAL_SECONDS);
   }, [phase, count, final]);
 
   useEffect(() => {
@@ -128,8 +132,8 @@ export default function App() {
 
   const elapsed = TOTAL_SECONDS - count;
   const sceneIndex = phase === "counting" ? Math.min(Math.floor(elapsed / SCENE_SECONDS), SCENES.length - 1) : -1;
-  const ringProgress = final ? (FINAL_SECONDS - count) / FINAL_SECONDS : 0;
   const trackProgress = phase === "counting" ? elapsed / TOTAL_SECONDS : 0;
+  const ringProgress = trackProgress; // the dial fills across the whole run
   const status = final ? STATUS.ignition : elapsed < (TOTAL_SECONDS - FINAL_SECONDS) / 2 ? STATUS.check : STATUS.fuel;
 
   return (
@@ -168,41 +172,34 @@ export default function App() {
       {phase === "counting" && (
         <>
           {final && <div className="edge-glow" key={`g${count}`} />}
-          <section className="center counting" key="counting">
-            {final ? (
-              <>
-                <p className="eyebrow pill">{TITLE} launches in</p>
-                <div className="ring-wrap">
-                  <div className="ring-glass" />
-                  <svg className="ring" viewBox="0 0 440 440">
-                    <defs>
-                      <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
-                        <stop offset="0%" stopColor="#26A9E0" />
-                        <stop offset="100%" stopColor="#8BC53F" />
-                      </linearGradient>
-                    </defs>
-                    <circle cx="220" cy="220" r={RADIUS} className="ring-bg" />
-                    <circle
-                      cx="220"
-                      cy="220"
-                      r={RADIUS}
-                      className="ring-fg"
-                      stroke="url(#grad)"
-                      strokeDasharray={CIRCUMFERENCE}
-                      strokeDashoffset={CIRCUMFERENCE * ringProgress}
-                      transform="rotate(-90 220 220)"
-                    />
-                  </svg>
-                  <div className="pulse" key={`p${count}`} />
-                  <span className="number" key={count}>
-                    {count}
-                  </span>
-                </div>
-              </>
-            ) : (
-              <p className="eyebrow pill intro-pill">{TITLE}</p>
-            )}
-          </section>
+          <p className="eyebrow pill top-pill">{final ? `${TITLE} launches in` : TITLE}</p>
+
+          <div className={`dial ${centered ? "center-dial" : "docked"}`}>
+            <div className="ring-glass" />
+            <svg className="ring" viewBox="0 0 440 440">
+              <defs>
+                <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#26A9E0" />
+                  <stop offset="100%" stopColor="#8BC53F" />
+                </linearGradient>
+              </defs>
+              <circle cx="220" cy="220" r={RADIUS} className="ring-bg" />
+              <circle
+                cx="220"
+                cy="220"
+                r={RADIUS}
+                className="ring-fg"
+                stroke="url(#grad)"
+                strokeDasharray={CIRCUMFERENCE}
+                strokeDashoffset={CIRCUMFERENCE * ringProgress}
+                transform="rotate(-90 220 220)"
+              />
+            </svg>
+            <div className="pulse" key={`p${count}`} />
+            <span className="number" key={count}>
+              {count}
+            </span>
+          </div>
 
           <div className="hud glass-card" key="hud">
             <div className="hud-row">
