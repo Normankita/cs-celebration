@@ -1,0 +1,217 @@
+/* Cinematic photo montage, launch HUD, final-10 rumble and rocket liftoff. */
+
+:root {
+  --veil: linear-gradient(rgba(255, 255, 255, 0.2), rgba(235, 246, 252, 0.3));
+  --veil-final: rgba(245, 251, 254, 0.6);
+}
+:root[data-theme="dark"] {
+  --veil: linear-gradient(rgba(5, 13, 21, 0.22), rgba(5, 13, 21, 0.38));
+  --veil-final: rgba(5, 13, 21, 0.74);
+}
+
+/* ---------- cinematic photo background ---------- */
+.cinematic {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 1.2s;
+  pointer-events: none;
+}
+.cinematic.show { opacity: 1; }
+.scene { position: absolute; inset: 0; opacity: 0; transition: opacity 1.6s ease-in-out; }
+.scene.on { opacity: 1; }
+.scene img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.scene-fill { object-fit: cover; filter: blur(38px) saturate(1.25); transform: scale(1.25); }
+.scene-main {
+  object-fit: contain;
+  filter: drop-shadow(0 0 3vmin rgba(0, 20, 40, 0.28));
+  transform: scale(1);
+  transition: transform 14s linear;
+}
+.scene.zoom .scene-main { transform: scale(1.07); }
+.veil {
+  position: absolute;
+  inset: 0;
+  background: var(--veil);
+  transition: background 1.4s;
+}
+.cinematic.final .veil {
+  background: var(--veil-final);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+}
+.bg-blob { transition: opacity 1s; }
+.phase-counting .bg-blob { opacity: 0; }
+
+/* ---------- launch HUD ---------- */
+.intro-pill {
+  position: fixed;
+  top: 3vmin;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: clamp(0.9rem, 2.4vmin, 1.6rem);
+  animation: pillIn 0.9s both;
+}
+@keyframes pillIn { from { opacity: 0; transform: translate(-50%, -3vmin); } }
+.counting .ring-wrap { width: min(54vmin, 560px); }
+.counting .number { font-size: min(35vmin, 350px); }
+
+.hud {
+  position: fixed;
+  z-index: 4;
+  left: 50%;
+  bottom: 2.6vmin;
+  transform: translateX(-50%);
+  width: min(88vw, 1100px);
+  padding: 1.6vmin 3vmin 2vmin;
+  border-radius: 28px;
+  animation: hudIn 0.9s cubic-bezier(.2,.8,.2,1) both;
+}
+@keyframes hudIn { from { opacity: 0; transform: translate(-50%, 6vmin); } }
+.hud-row { display: flex; justify-content: space-between; align-items: baseline; gap: 2vmin; margin-bottom: 1.4vmin; }
+.hud-status {
+  display: flex;
+  align-items: center;
+  gap: 1.2vmin;
+  font-weight: 600;
+  font-size: clamp(0.85rem, 2.2vmin, 1.5rem);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.hud-dot {
+  width: 1.3vmin;
+  height: 1.3vmin;
+  min-width: 9px;
+  min-height: 9px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 12px var(--green);
+  animation: blink 1s ease-in-out infinite;
+}
+.final .hud-dot { background: #ffb54a; box-shadow: 0 0 14px #ffb54a; animation-duration: 0.35s; }
+@keyframes blink { 50% { opacity: 0.25; } }
+.hud-clock {
+  font-weight: 800;
+  font-size: clamp(1.6rem, 6vmin, 4rem);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--text);
+}
+.hud-clock small {
+  font-size: 0.32em;
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-right: 0.8em;
+}
+.track { position: relative; height: 1.3vmin; min-height: 8px; border-radius: 999px; background: var(--track); }
+.track-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--blue), var(--green));
+  box-shadow: 0 0 14px rgba(38, 169, 224, 0.6);
+  transition: width 1s linear;
+}
+.track-rocket {
+  position: absolute;
+  top: 50%;
+  width: 2.4vmin;
+  min-width: 16px;
+  transform: translate(-50%, -50%) rotate(90deg);
+  transition: left 1s linear;
+  filter: drop-shadow(0 0 6px rgba(255, 190, 90, 0.8));
+}
+
+/* ---------- final-10 rumble + pulsing edge glow ---------- */
+.stage.final .cinematic,
+.stage.final .counting { animation: rumble 0.09s linear infinite; }
+@keyframes rumble {
+  0%, 100% { transform: translate(calc(var(--amp) * 1px), calc(var(--amp) * -0.6px)) scale(1.03); }
+  25% { transform: translate(calc(var(--amp) * -1px), calc(var(--amp) * 0.8px)) scale(1.03); }
+  50% { transform: translate(calc(var(--amp) * 0.7px), calc(var(--amp) * 0.9px)) scale(1.03); }
+  75% { transform: translate(calc(var(--amp) * -0.8px), calc(var(--amp) * -0.8px)) scale(1.03); }
+}
+.edge-glow {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  box-shadow: inset 0 0 14vmin 2vmin rgba(38, 169, 224, 0.6);
+  animation: edgePulse 1s ease-out both;
+}
+@keyframes edgePulse { 0% { opacity: 0; } 15% { opacity: 1; } 100% { opacity: 0.2; } }
+
+/* ---------- rocket + liftoff ---------- */
+.rocket-svg { display: block; width: 100%; height: auto; overflow: visible; }
+.rocket-flame {
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+  animation: flicker 0.1s ease-in-out infinite alternate;
+}
+@keyframes flicker { from { transform: scale(0.9, 0.8); } to { transform: scale(1.08, 1.15); } }
+
+.liftoff { position: fixed; inset: 0; z-index: 6; pointer-events: none; overflow: hidden; }
+.rocket-big {
+  position: absolute;
+  left: 50%;
+  bottom: 1vmin;
+  width: 10vmin;
+  filter: drop-shadow(0 0 3vmin rgba(255, 190, 90, 0.7));
+  animation: liftoff 1.5s cubic-bezier(.6, 0, .9, .5) both;
+}
+.rocket-big .rocket-flame { animation-name: flicker-big; }
+@keyframes flicker-big { from { transform: scale(1, 1.5); } to { transform: scale(1.15, 2.1); } }
+@keyframes liftoff {
+  0% { transform: translate(-50%, 4vmin) scale(0.7); opacity: 0; }
+  10% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, -145vh) scale(1.2); opacity: 1; }
+}
+.smoke {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 7vmin;
+  height: 0;
+  transform: translateX(-50%);
+  border-radius: 50% 50% 0 0;
+  background: linear-gradient(to top, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.4) 60%, rgba(255, 255, 255, 0));
+  filter: blur(1.2vmin);
+  animation: smoke 1.5s cubic-bezier(.6, 0, .9, .5) both;
+}
+@keyframes smoke {
+  0% { height: 0; opacity: 0; }
+  10% { height: 8vmin; opacity: 1; }
+  80% { height: 105vh; opacity: 0.85; width: 9vmin; }
+  100% { height: 145vh; opacity: 0; width: 14vmin; }
+}
+.puff {
+  position: absolute;
+  bottom: -3vmin;
+  width: 26vmin;
+  height: 13vmin;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0));
+  filter: blur(1vmin);
+  opacity: 0;
+  animation: puff 1.9s ease-out 0.1s both;
+}
+.puff-l { left: calc(50% - 26vmin); --dx: -14vmin; }
+.puff-r { left: 50%; --dx: 14vmin; }
+@keyframes puff {
+  0% { transform: translateX(0) scale(0.3); opacity: 0; }
+  15% { opacity: 1; }
+  100% { transform: translateX(var(--dx)) scale(2.4); opacity: 0; }
+}
+
+/* the celebration text waits for the rocket (--lift is set on the section) */
+@keyframes cardIn { from { opacity: 0; transform: translateY(5vmin) scale(0.96); } }
+.celebrate-card { animation: cardIn 0.9s var(--lift, 0s) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .stage.final .cinematic, .stage.final .counting { animation: none; }
+  .scene-main { transition: none; }
+}

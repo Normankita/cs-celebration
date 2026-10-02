@@ -1,17 +1,30 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import Confetti from "./Confetti.jsx";
 import Fireworks from "./Fireworks.jsx";
+import Cinematic from "./Cinematic.jsx";
+import Rocket from "./Rocket.jsx";
+import { SCENES } from "./scenes.js";
 import * as sound from "./sound.js";
 
 // ---- Easy settings ---------------------------------------------------------
-const COUNTDOWN_SECONDS = 10;
+const TOTAL_SECONDS = 30; // whole launch sequence: photo montage + final countdown
+const FINAL_SECONDS = 10; // the big-number countdown at the end (the montage runs before it)
+const LIFT_MS = 800; // how long the rocket flies before the fireworks start
 const TITLE = "Door to Door Campaign";
 const CELEBRATION_MESSAGE = "Let the Campaign begin!";
 const SUBTITLE = "Thank you for putting our customers first";
+const STATUS = {
+  check: "Systems check",
+  fuel: "Fuelled by great service",
+  ignition: "Ignition sequence",
+};
 // -----------------------------------------------------------------------------
 
 const RADIUS = 200;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+const SCENE_SECONDS = TOTAL_SECONDS / SCENES.length;
+
+const clock = (n) => `${String(Math.floor(n / 60)).padStart(2, "0")}:${String(n % 60).padStart(2, "0")}`;
 
 // Remembered choice wins; otherwise follow the operating system's preference.
 function initialTheme() {
@@ -24,15 +37,16 @@ function initialTheme() {
 
 export default function App() {
   const [phase, setPhase] = useState("idle"); // idle | counting | celebrate
-  const [count, setCount] = useState(COUNTDOWN_SECONDS);
+  const [count, setCount] = useState(TOTAL_SECONDS);
   const [muted, setMuted] = useState(false);
   const [theme, setTheme] = useState(initialTheme);
+  const [lifted, setLifted] = useState(false); // rocket has cleared the top: fireworks may start
   const timer = useRef(null);
 
   const start = useCallback(() => {
     sound.unlock();
     clearInterval(timer.current);
-    setCount(COUNTDOWN_SECONDS);
+    setCount(TOTAL_SECONDS);
     setPhase("counting");
     timer.current = setInterval(() => {
       setCount((c) => {
@@ -49,7 +63,7 @@ export default function App() {
   const reset = useCallback(() => {
     clearInterval(timer.current);
     setPhase("idle");
-    setCount(COUNTDOWN_SECONDS);
+    setCount(TOTAL_SECONDS);
   }, []);
 
   const toggleMute = useCallback(() => {
@@ -91,15 +105,39 @@ export default function App() {
 
   useEffect(() => () => clearInterval(timer.current), []);
 
-  useEffect(() => {
-    if (phase === "counting") sound.tick();
-    else if (phase === "celebrate") sound.celebrate();
-  }, [phase, count]);
+  const final = phase === "counting" && count <= FINAL_SECONDS;
 
-  const progress = phase === "counting" ? (COUNTDOWN_SECONDS - count) / COUNTDOWN_SECONDS : 0;
+  // BBC-style pips and the building engine rumble only in the final countdown.
+  useEffect(() => {
+    if (final) sound.tick();
+    if (phase === "counting" && count === FINAL_SECONDS) sound.startRumble(FINAL_SECONDS);
+  }, [phase, count, final]);
+
+  useEffect(() => {
+    if (phase === "celebrate") sound.celebrate();
+    else sound.stopRumble();
+  }, [phase]);
+
+  // Fireworks begin once the rocket has left the screen.
+  useEffect(() => {
+    setLifted(false);
+    if (phase !== "celebrate") return;
+    const t = setTimeout(() => setLifted(true), LIFT_MS);
+    return () => clearTimeout(t);
+  }, [phase]);
+
+  const elapsed = TOTAL_SECONDS - count;
+  const sceneIndex = phase === "counting" ? Math.min(Math.floor(elapsed / SCENE_SECONDS), SCENES.length - 1) : -1;
+  const ringProgress = final ? (FINAL_SECONDS - count) / FINAL_SECONDS : 0;
+  const trackProgress = phase === "counting" ? elapsed / TOTAL_SECONDS : 0;
+  const status = final ? STATUS.ignition : elapsed < (TOTAL_SECONDS - FINAL_SECONDS) / 2 ? STATUS.check : STATUS.fuel;
 
   return (
-    <main className={`stage phase-${phase}`}>
+    <main
+      className={`stage phase-${phase} ${final ? "final" : ""}`}
+      style={{ "--amp": final ? (FINAL_SECONDS - count + 1) * 0.45 : 0 }}
+    >
+      <Cinematic index={sceneIndex} final={final} />
       <div className="controls">
         <button
           className="icon-btn"
@@ -128,47 +166,80 @@ export default function App() {
       )}
 
       {phase === "counting" && (
-        <section className="center counting" key="counting">
-          <p className="eyebrow pill">{TITLE} begins in</p>
-          <div className="ring-wrap">
-            <div className="ring-glass" />
-            <svg className="ring" viewBox="0 0 440 440">
-              <defs>
-                <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="#26A9E0" />
-                  <stop offset="100%" stopColor="#8BC53F" />
-                </linearGradient>
-              </defs>
-              <circle cx="220" cy="220" r={RADIUS} className="ring-bg" />
-              <circle
-                cx="220"
-                cy="220"
-                r={RADIUS}
-                className="ring-fg"
-                stroke="url(#grad)"
-                strokeDasharray={CIRCUMFERENCE}
-                strokeDashoffset={CIRCUMFERENCE * progress}
-                transform="rotate(-90 220 220)"
-              />
-            </svg>
-            <div className="pulse" key={`p${count}`} />
-            <span className="number" key={count}>
-              {count}
-            </span>
+        <>
+          {final && <div className="edge-glow" key={`g${count}`} />}
+          <section className="center counting" key="counting">
+            {final ? (
+              <>
+                <p className="eyebrow pill">{TITLE} launches in</p>
+                <div className="ring-wrap">
+                  <div className="ring-glass" />
+                  <svg className="ring" viewBox="0 0 440 440">
+                    <defs>
+                      <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stopColor="#26A9E0" />
+                        <stop offset="100%" stopColor="#8BC53F" />
+                      </linearGradient>
+                    </defs>
+                    <circle cx="220" cy="220" r={RADIUS} className="ring-bg" />
+                    <circle
+                      cx="220"
+                      cy="220"
+                      r={RADIUS}
+                      className="ring-fg"
+                      stroke="url(#grad)"
+                      strokeDasharray={CIRCUMFERENCE}
+                      strokeDashoffset={CIRCUMFERENCE * ringProgress}
+                      transform="rotate(-90 220 220)"
+                    />
+                  </svg>
+                  <div className="pulse" key={`p${count}`} />
+                  <span className="number" key={count}>
+                    {count}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <p className="eyebrow pill intro-pill">{TITLE}</p>
+            )}
+          </section>
+
+          <div className="hud glass-card" key="hud">
+            <div className="hud-row">
+              <span className="hud-status">
+                <i className="hud-dot" />
+                {status}
+              </span>
+              <span className="hud-clock">
+                <small>T-minus</small> {clock(count)}
+              </span>
+            </div>
+            <div className="track">
+              <div className="track-fill" style={{ width: `${trackProgress * 100}%` }} />
+              <div className="track-rocket" style={{ left: `${trackProgress * 100}%` }}>
+                <Rocket />
+              </div>
+            </div>
           </div>
-        </section>
+        </>
       )}
 
       {phase === "celebrate" && (
-        <section className="center celebrate" key="celebrate">
-          <Fireworks active />
-          <Confetti active />
+        <section className="center celebrate" key="celebrate" style={{ "--lift": `${LIFT_MS / 1000}s` }}>
+          <div className="liftoff" aria-hidden="true">
+            <div className="smoke" />
+            <div className="puff puff-l" />
+            <div className="puff puff-r" />
+            <Rocket className="rocket-big" />
+          </div>
+          {lifted && <Fireworks active />}
+          {lifted && <Confetti active />}
           <div className="burst" />
           <div className="glass-card celebrate-card">
             <p className="eyebrow">{CELEBRATION_MESSAGE}</p>
             <h1 className="title big">
               {TITLE.split(" ").map((w, i) => (
-                <span key={i} className="word" style={{ animationDelay: `${0.15 + i * 0.18}s` }}>
+                <span key={i} className="word" style={{ animationDelay: `calc(var(--lift) + ${0.15 + i * 0.18}s)` }}>
                   {w}
                 </span>
               ))}

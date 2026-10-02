@@ -83,14 +83,62 @@ export function tick() {
   pip(0.1);
 }
 
-// The long pip at zero, then a rising crowd cheer / applause under the fireworks.
+// The long pip at zero, the rocket's liftoff roar, then a rising crowd cheer under the fireworks.
 export function celebrate() {
   if (!ctx) return;
   pip(0.5, 0.6);
-  noise(0.4, 3.5, { gain: 0.05, from: 900, to: 2600, type: "bandpass" });
+  liftoff();
+  noise(1.1, 3.5, { gain: 0.05, from: 900, to: 2600, type: "bandpass" });
   for (let i = 0; i < 70; i++) {
-    noise(1 + Math.random() * 4, 0.05, { gain: 0.07, from: 1500 + Math.random() * 3500, to: 1200 });
+    noise(1.5 + Math.random() * 4, 0.05, { gain: 0.07, from: 1500 + Math.random() * 3500, to: 1200 });
   }
+}
+
+// Engine roar + rising whoosh as the rocket leaves the pad.
+function liftoff() {
+  tone(70, 0, 1.6, { type: "sawtooth", gain: 0.35, attack: 0.15, slideTo: 40 });
+  noise(0, 1.8, { gain: 0.9, from: 700, to: 120, type: "lowpass" });
+  noise(0.1, 1.3, { gain: 0.5, from: 300, to: 4500, type: "bandpass" });
+}
+
+// Engine rumble that builds through the final countdown. Call stopRumble() on reset.
+let rumble = null;
+export function startRumble(seconds) {
+  if (!ctx) return;
+  stopRumble();
+  const len = ctx.sampleRate * 2;
+  const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  let last = 0;
+  for (let i = 0; i < len; i++) {
+    // brown-ish noise: low, growly
+    last = (last + 0.02 * (Math.random() * 2 - 1)) / 1.02;
+    data[i] = last * 3.5;
+  }
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  src.loop = true;
+  const filter = ctx.createBiquadFilter();
+  filter.type = "lowpass";
+  const t = ctx.currentTime;
+  filter.frequency.setValueAtTime(90, t);
+  filter.frequency.exponentialRampToValueAtTime(420, t + seconds);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.02, t);
+  g.gain.exponentialRampToValueAtTime(0.9, t + seconds);
+  src.connect(filter).connect(g).connect(master);
+  src.start(t);
+  rumble = { src, g };
+}
+
+export function stopRumble() {
+  if (!rumble || !ctx) return;
+  const { src, g } = rumble;
+  rumble = null;
+  const t = ctx.currentTime;
+  g.gain.cancelScheduledValues(t);
+  g.gain.setTargetAtTime(0.0001, t, 0.05);
+  src.stop(t + 0.4);
 }
 
 // A rocket: rising whistle for `flight` seconds, then the burst lands exactly when it ends.

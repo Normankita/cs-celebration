@@ -120,7 +120,7 @@ body {
   border-radius: 999px;
   letter-spacing: 0.28em;
 }
-.celebrate .eyebrow { animation: rise 0.8s both; }
+.celebrate .eyebrow { animation: rise 0.8s var(--lift, 0s) both; }
 
 .title {
   font-size: clamp(2.5rem, 10vmin, 8rem);
@@ -231,7 +231,7 @@ body {
 .subtitle {
   font-size: clamp(1.1rem, 3.4vmin, 2.4rem);
   font-weight: 600;
-  animation: rise 1s 1.2s both;
+  animation: rise 1s calc(var(--lift, 0s) + 1.2s) both;
 }
 .burst {
   position: absolute;
@@ -239,7 +239,8 @@ body {
   height: 20vmin;
   border-radius: 50%;
   border: 1.2vmin solid #fff;
-  animation: burst 1.4s ease-out both;
+  opacity: 0;
+  animation: burst 1.4s var(--lift, 0s) ease-out forwards;
   z-index: -1;
 }
 @keyframes burst { from { transform: scale(0.2); opacity: 1; } to { transform: scale(9); opacity: 0; } }
