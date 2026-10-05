@@ -241,7 +241,7 @@ export default function App() {
                 </span>
               ))}
             </h1>
-            <p className="subtitle">{SUBTITLE}</p>
+            {/* <p className="subtitle">{SUBTITLE}</p> */}
           </div>
           <button className="btn ghost" onClick={reset}>
             Reset
