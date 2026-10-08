@@ -1,9 +1,8 @@
 import { useEffect, useRef } from "react";
 
-const COLORS = ["#26A9E0", "#8BC53F", "#929497", "#ffffff"];
 const rand = (min, max) => Math.random() * (max - min) + min;
 
-function makePiece(x, y, angle, speed) {
+function makePiece(COLORS, x, y, angle, speed) {
   return {
     x,
     y,
@@ -19,11 +18,12 @@ function makePiece(x, y, angle, speed) {
 }
 
 // Full-screen confetti: two cannons at the bottom corners, then a continuous rain.
-export default function Confetti({ active }) {
+export default function Confetti({ active, colors }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
     if (!active) return;
+    const COLORS = [colors.primary, colors.secondary, colors.accent, "#ffffff"];
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     const dpr = window.devicePixelRatio || 1;
@@ -43,13 +43,13 @@ export default function Confetti({ active }) {
       for (let i = 0; i < 90; i++) {
         const base = fromLeft ? -Math.PI / 3 : (-2 * Math.PI) / 3;
         pieces.push(
-          makePiece(fromLeft ? 0 : W(), H(), base + rand(-0.4, 0.4), rand(14, 34))
+          makePiece(COLORS, fromLeft ? 0 : W(), H(), base + rand(-0.4, 0.4), rand(14, 34))
         );
       }
     };
     const rain = (n) => {
       for (let i = 0; i < n; i++) {
-        const p = makePiece(rand(0, W()), -20, Math.PI / 2, rand(1, 4));
+        const p = makePiece(COLORS, rand(0, W()), -20, Math.PI / 2, rand(1, 4));
         p.vx = rand(-1.5, 1.5);
         pieces.push(p);
       }

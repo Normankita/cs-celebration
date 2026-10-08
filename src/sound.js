@@ -2,7 +2,7 @@
 let ctx = null;
 let master = null;
 let muted = false;
-const LEVEL = 0.8;
+let level = 0.8;
 
 // Browsers only allow audio after a user gesture, so call this from a click/keypress.
 export function unlock() {
@@ -11,7 +11,7 @@ export function unlock() {
     if (!AC) return;
     ctx = new AC();
     master = ctx.createGain();
-    master.gain.value = muted ? 0 : LEVEL;
+    master.gain.value = muted ? 0 : level;
     // Compressor keeps a barrage of overlapping booms from clipping.
     const comp = ctx.createDynamicsCompressor();
     comp.threshold.value = -18;
@@ -23,7 +23,18 @@ export function unlock() {
 
 export function setMuted(m) {
   muted = m;
-  if (master) master.gain.setTargetAtTime(m ? 0 : LEVEL, ctx.currentTime, 0.02);
+  if (master) master.gain.setTargetAtTime(m ? 0 : level, ctx.currentTime, 0.02);
+}
+
+// v = 0..1
+export function setVolume(v) {
+  level = Math.min(1, Math.max(0, v));
+  if (master && !muted) master.gain.setTargetAtTime(level, ctx.currentTime, 0.02);
+}
+
+// True once the browser has allowed audio (after a click or key press).
+export function isReady() {
+  return !!ctx && ctx.state === "running";
 }
 
 const rand = (min, max) => Math.random() * (max - min) + min;
@@ -100,13 +111,14 @@ export function beep(p) {
 }
 
 // The long pip at zero, the rocket's liftoff roar, then a rising crowd cheer under the fireworks.
-export function celebrate() {
+export function celebrate({ rocket = true } = {}) {
   if (!ctx) return;
   pip(0.5, 0.6);
-  liftoff();
-  noise(1.1, 3.5, { gain: 0.05, from: 900, to: 2600, type: "bandpass" });
+  if (rocket) liftoff();
+  const o = rocket ? 1.1 : 0.2; // cheer starts as the fireworks do
+  noise(o, 3.5, { gain: 0.05, from: 900, to: 2600, type: "bandpass" });
   for (let i = 0; i < 70; i++) {
-    noise(1.5 + Math.random() * 4, 0.05, { gain: 0.07, from: 1500 + Math.random() * 3500, to: 1200 });
+    noise(o + 0.4 + Math.random() * 4, 0.05, { gain: 0.07, from: 1500 + Math.random() * 3500, to: 1200 });
   }
 }
 

@@ -11,7 +11,7 @@
   --blob-opacity: 0.45;
   --glass-bg: rgba(255, 255, 255, 0.42);
   --glass-border: rgba(255, 255, 255, 0.8);
-  --glass-shadow: 0 24px 60px rgba(38, 169, 224, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  --glass-shadow: 0 24px 60px color-mix(in srgb, var(--blue) 20%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.95);
   --track: rgba(146, 148, 151, 0.28);
 }
 
@@ -160,10 +160,10 @@ body {
   color: #fff;
   cursor: pointer;
   background: linear-gradient(90deg, var(--blue), var(--green));
-  box-shadow: 0 12px 30px rgba(38, 169, 224, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  box-shadow: 0 12px 30px color-mix(in srgb, var(--blue) 40%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.45);
   transition: transform 0.2s, box-shadow 0.2s;
 }
-.btn:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 18px 40px rgba(38, 169, 224, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.45); }
+.btn:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 18px 40px color-mix(in srgb, var(--blue) 50%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.45); }
 .btn.ghost {
   background: rgba(255, 255, 255, 0.14);
   border: 1px solid rgba(255, 255, 255, 0.55);
@@ -187,7 +187,7 @@ body {
   place-items: center;
 }
 .ring-glass { position: absolute; inset: 3%; border-radius: 50%; }
-.ring { position: absolute; inset: 0; width: 100%; height: 100%; filter: drop-shadow(0 0 16px rgba(38, 169, 224, 0.45)); }
+.ring { position: absolute; inset: 0; width: 100%; height: 100%; filter: drop-shadow(0 0 16px color-mix(in srgb, var(--blue) 45%, transparent)); }
 .ring-bg { fill: none; stroke: var(--track); stroke-width: 14; }
 .ring-fg { fill: none; stroke-width: 14; stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
 .number {
@@ -199,7 +199,7 @@ body {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 8px 24px rgba(38, 169, 224, 0.3));
+  filter: drop-shadow(0 8px 24px color-mix(in srgb, var(--blue) 30%, transparent));
   animation: pop 1s cubic-bezier(.2,.9,.3,1.2) both;
 }
 @keyframes pop {

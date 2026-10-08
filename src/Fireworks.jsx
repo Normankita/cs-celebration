@@ -1,24 +1,29 @@
 import { useEffect, useRef } from "react";
 import * as sound from "./sound.js";
 
-// Brand colours, lightened so they glow against the night-sky background, plus one warm accent.
-const PALETTES = [
-  ["#5fd0ff", "#26A9E0", "#ffffff"],
-  ["#b6e36a", "#8BC53F", "#ffffff"],
-  ["#26A9E0", "#8BC53F", "#ffffff"],
-  ["#ffffff", "#d5d7d9", "#5fd0ff"],
-  ["#ffe08a", "#fff3c4", "#8BC53F"],
-];
+import { tint } from "./lib/config.js";
+
+// Palettes are built from the counter's colours, lightened so they glow, plus one warm accent.
+function makePalettes({ primary, secondary, accent }) {
+  return [
+    [tint(primary, 0.45), primary, "#ffffff"],
+    [tint(secondary, 0.4), secondary, "#ffffff"],
+    [primary, secondary, "#ffffff"],
+    ["#ffffff", tint(accent, 0.5), tint(primary, 0.45)],
+    ["#ffe08a", "#fff3c4", secondary],
+  ];
+}
 const rand = (min, max) => Math.random() * (max - min) + min;
 const pick = (arr) => arr[(Math.random() * arr.length) | 0];
 
 // Full-screen fireworks. Every rocket schedules its own whistle + boom in sound.js,
 // timed to land exactly when the visual burst happens.
-export default function Fireworks({ active }) {
+export default function Fireworks({ active, colors }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
     if (!active) return;
+    const PALETTES = makePalettes(colors);
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     const dpr = window.devicePixelRatio || 1;
