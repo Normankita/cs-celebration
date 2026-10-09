@@ -1,5 +1,6 @@
 import { useCallback, useLayoutEffect, useState } from "react";
 import { getPref, setPref } from "./store.js";
+import { withTransition } from "./transition.js";
 
 const system = () => (window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light");
 
@@ -19,11 +20,21 @@ export function useTheme(configTheme = "auto", persistKey = null) {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
 
-  const toggle = useCallback(() => {
-    const next = theme === "dark" ? "light" : "dark";
-    setOverride(next);
-    if (persistKey) setPref(persistKey, next);
-  }, [theme, persistKey]);
+  // Pass the click event so the reveal grows from the button; with no event (keyboard) it grows from the centre.
+  const toggle = useCallback(
+    (e) => {
+      const next = theme === "dark" ? "light" : "dark";
+      const origin = e && typeof e.clientX === "number" && (e.clientX || e.clientY) ? { x: e.clientX, y: e.clientY } : undefined;
+      withTransition(
+        () => {
+          setOverride(next);
+          if (persistKey) setPref(persistKey, next);
+        },
+        { kind: "theme", origin }
+      );
+    },
+    [theme, persistKey]
+  );
 
   return [theme, toggle];
 }

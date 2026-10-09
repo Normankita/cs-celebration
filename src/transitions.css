@@ -1,0 +1,67 @@
+/* Motion between pages, themes and countdown states. */
+
+/* ---------- page changes (View Transitions) ---------- */
+html[data-vt="page"]::view-transition-old(root) { animation: vtOut 0.28s cubic-bezier(.4, 0, 1, 1) both; }
+html[data-vt="page"]::view-transition-new(root) { animation: vtIn 0.55s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes vtOut { to { opacity: 0; transform: scale(0.985); filter: blur(8px); } }
+@keyframes vtIn { from { opacity: 0; transform: translateY(18px) scale(1.012); filter: blur(10px); } }
+
+/* ---------- theme change: the new theme is revealed as a growing circle (see lib/transition.js) ---------- */
+html[data-vt="theme"]::view-transition-old(root),
+html[data-vt="theme"]::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+html[data-vt="theme"]::view-transition-old(root) { z-index: 1; }
+html[data-vt="theme"]::view-transition-new(root) { z-index: 2; }
+
+/* browsers without View Transitions: plain colour fade, and a gentle entrance on each page */
+html.theme-fade, html.theme-fade * {
+  transition: background-color 0.55s ease, color 0.55s ease, border-color 0.55s ease, fill 0.55s ease, stroke 0.55s ease !important;
+}
+.no-vt .page, .no-vt .stage { animation: routeIn 0.5s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes routeIn { from { opacity: 0; transform: translateY(12px); } }
+
+/* ---------- countdown states ---------- */
+/* sections share one grid cell so a leaving screen and an arriving one overlap and cross-fade */
+.stage > .center { grid-area: 1 / 1; }
+
+/* the night-sky celebration background fades in over the day background */
+.sky {
+  position: absolute;
+  inset: 0;
+  background: var(--bg-celebrate);
+  opacity: 0;
+  transition: opacity 1.4s ease;
+  pointer-events: none;
+}
+.phase-celebrate .sky { opacity: 1; }
+
+/* exit animation for anything that was just replaced (see lib/presence.js) */
+.leave { animation: leaveOut 0.45s cubic-bezier(.4, 0, 1, 1) both !important; pointer-events: none; }
+@keyframes leaveOut { to { opacity: 0; scale: 0.96; filter: blur(8px); } }
+/* the celebration holds full-screen canvases, so it may only fade (a transform/filter would re-anchor them) */
+.celebrate.leave { animation: leaveFade 0.5s ease both !important; }
+@keyframes leaveFade { to { opacity: 0; } }
+
+/* palette changes glide (--blue/--green/--gray are registered colours, see styles.css) */
+.stage { transition: --blue 0.7s ease, --green 0.7s ease, --gray 0.7s ease; }
+
+/* ---------- home & editor: staggered entrance ---------- */
+.wrap > *, .forms > *, .cards > * { animation: rise 0.7s cubic-bezier(.2, .8, .2, 1) both; }
+.wrap > :nth-child(2), .forms > :nth-child(2), .cards > :nth-child(2) { animation-delay: 0.06s; }
+.wrap > :nth-child(3), .forms > :nth-child(3), .cards > :nth-child(3) { animation-delay: 0.12s; }
+.wrap > :nth-child(4), .forms > :nth-child(4), .cards > :nth-child(4) { animation-delay: 0.18s; }
+.forms > :nth-child(5), .cards > :nth-child(5) { animation-delay: 0.24s; }
+.forms > :nth-child(6), .cards > :nth-child(6) { animation-delay: 0.3s; }
+.forms > :nth-child(7), .cards > :nth-child(7) { animation-delay: 0.36s; }
+.previewcol { animation: rise 0.7s 0.1s cubic-bezier(.2, .8, .2, 1) both; }
+
+/* small things should ease too */
+.btn, .icon-btn, .chip, .pal, .bgopt, .seg button, .tpl, .card { transition: transform 0.2s, box-shadow 0.2s, background-color 0.25s, border-color 0.25s, opacity 0.2s; }
+.card:hover { transform: translateY(-3px); }
+.pal:hover, .bgopt:hover, .seg button:hover { transform: translateY(-1px); }
+.pal.on, .chip.on { border-color: var(--blue); background: color-mix(in srgb, var(--blue) 14%, transparent); }
+
+@media (prefers-reduced-motion: reduce) {
+  .wrap > *, .forms > *, .cards > *, .previewcol, .no-vt .page, .no-vt .stage { animation: none !important; }
+  .sky, .stage { transition: none; }
+  .leave, .celebrate.leave { animation-duration: 0.01s !important; }
+}

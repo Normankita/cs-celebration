@@ -4,10 +4,15 @@
 //   /<name>/edit      edit a counter
 //   /preview          live preview frame used by the editor
 import { useEffect, useState } from "react";
+import { withTransition } from "./transition.js";
 
 export function navigate(to, { replace = false } = {}) {
-  history[replace ? "replaceState" : "pushState"](null, "", to);
-  window.dispatchEvent(new Event("liftoff:nav"));
+  const go = () => {
+    history[replace ? "replaceState" : "pushState"](null, "", to);
+    window.dispatchEvent(new Event("liftoff:nav"));
+  };
+  if (replace) go();
+  else withTransition(go, { kind: "page" });
 }
 
 export function useLocation() {

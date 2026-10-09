@@ -182,10 +182,13 @@ input[type="range"] { width: 100%; accent-color: var(--blue); }
 .pal i { width: 18px; height: 18px; border-radius: 50%; margin-right: -5px; border: 2px solid var(--glass-bg); }
 .pal span { margin-left: 12px; }
 .pal:hover { border-color: var(--blue); }
-.colors { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.color { display: grid; gap: 4px; justify-items: start; font-size: 0.85rem; font-weight: 600; }
-.color input { width: 100%; height: 44px; padding: 0; border: 1px solid var(--glass-border); border-radius: 12px; background: transparent; cursor: pointer; }
-.color code { font-weight: 400; color: var(--muted); }
+.colors { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.color { display: grid; gap: 6px; font-size: 0.85rem; font-weight: 600; }
+.colorrow { display: flex; gap: 8px; align-items: center; }
+.color input[type="color"] { flex: none; width: 46px; height: 40px; padding: 2px; border: 1px solid var(--glass-border); border-radius: 12px; background: var(--glass-bg); cursor: pointer; }
+.input.hex { font-family: ui-monospace, Consolas, monospace; font-size: 0.85rem; padding: 0.55em 0.6em; min-width: 0; }
+.pal.shuffle { padding: 4px 14px; }
+.pal.shuffle span { margin-left: 0; }
 .bgs { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
 .bgopt { display: grid; gap: 3px; text-align: left; padding: 12px; border-radius: 14px; border: 1.5px solid var(--glass-border); background: transparent; color: var(--text); font: inherit; cursor: pointer; }
 .bgopt small { font-size: 0.75rem; color: var(--muted); font-weight: 400; }

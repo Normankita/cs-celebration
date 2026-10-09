@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { BACKGROUNDS, PALETTES, normalize } from "./lib/config.js";
+import { BACKGROUNDS, PALETTES, normalize, randomPalette } from "./lib/config.js";
 import { Link, navigate } from "./lib/router.jsx";
 import { shareUrl } from "./lib/share.js";
 import { deleteCounter, getCounter, isValidSlug, renameCounter, saveCounter } from "./lib/store.js";
@@ -70,6 +70,32 @@ function NumInput({ value, min, max, onCommit, unit }) {
       />
       {unit && <em>{unit}</em>}
     </span>
+  );
+}
+
+// Type a colour like #ff6b6b (or ff6b6b / f66); commits as soon as it is a valid colour.
+function HexInput({ value, onCommit }) {
+  const [text, setText] = useState(value);
+  useEffect(() => setText(value), [value]);
+  const parse = (t) => {
+    let h = t.trim().replace(/^#/, "");
+    if (/^[0-9a-f]{3}$/i.test(h)) h = h.replace(/./g, (c) => c + c);
+    return /^[0-9a-f]{6}$/i.test(h) ? `#${h.toLowerCase()}` : null;
+  };
+  return (
+    <input
+      className="input hex"
+      value={text}
+      maxLength={7}
+      spellCheck={false}
+      aria-label="Colour code"
+      onChange={(e) => {
+        setText(e.target.value);
+        const v = parse(e.target.value);
+        if (v) onCommit(v);
+      }}
+      onBlur={() => setText(value)}
+    />
   );
 }
 
@@ -322,34 +348,42 @@ function EditorInner({ slug, initial }) {
           </Panel>
 
           <Panel title="Look">
-            <Field label="Colour palette">
+            <Field label="Colour palette" hint="Pick a ready-made set, shuffle for a surprise, or choose your own colours below.">
               <span className="palettes">
-                {PALETTES.map((p) => (
-                  <button
-                    key={p.name}
-                    className="pal"
-                    title={p.name}
-                    onClick={() => set({ colors: { primary: p.colors[0], secondary: p.colors[1], accent: p.colors[2] } })}
-                  >
-                    {p.colors.map((c) => (
-                      <i key={c} style={{ background: c }} />
-                    ))}
-                    <span>{p.name}</span>
-                  </button>
-                ))}
+                {PALETTES.map((p) => {
+                  const on = p.colors[0] === cfg.colors.primary && p.colors[1] === cfg.colors.secondary && p.colors[2] === cfg.colors.accent;
+                  return (
+                    <button
+                      key={p.name}
+                      className={`pal ${on ? "on" : ""}`}
+                      title={p.name}
+                      onClick={() => set({ colors: { primary: p.colors[0], secondary: p.colors[1], accent: p.colors[2] } })}
+                    >
+                      {p.colors.map((c) => (
+                        <i key={c} style={{ background: c }} />
+                      ))}
+                      <span>{p.name}</span>
+                    </button>
+                  );
+                })}
+                <button className="pal shuffle" onClick={() => set({ colors: randomPalette() })}>
+                  <span>🎲 Surprise me</span>
+                </button>
               </span>
             </Field>
             <div className="colors">
               {[
-                ["primary", "Main"],
-                ["secondary", "Second"],
+                ["primary", "Main colour"],
+                ["secondary", "Second colour"],
                 ["accent", "Soft accent"],
               ].map(([k, label]) => (
-                <label key={k} className="color">
-                  <input type="color" value={cfg.colors[k]} onChange={(e) => setIn("colors", { [k]: e.target.value })} />
+                <div key={k} className="color">
                   <span>{label}</span>
-                  <code>{cfg.colors[k]}</code>
-                </label>
+                  <span className="colorrow">
+                    <input type="color" aria-label={label} value={cfg.colors[k]} onChange={(e) => setIn("colors", { [k]: e.target.value })} />
+                    <HexInput value={cfg.colors[k]} onCommit={(v) => setIn("colors", { [k]: v })} />
+                  </span>
+                </div>
               ))}
             </div>
 

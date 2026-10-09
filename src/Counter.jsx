@@ -4,6 +4,7 @@ import Confetti from "./Confetti.jsx";
 import Fireworks from "./Fireworks.jsx";
 import Rocket from "./Rocket.jsx";
 import * as sound from "./sound.js";
+import { usePresence } from "./lib/presence.js";
 import { useTheme } from "./lib/theme.js";
 
 const RADIUS = 200;
@@ -164,10 +165,18 @@ export default function Counter({ config, preview = false, extraControls = null 
     };
   }, [config.title, preview]);
 
+  // Each screen stays mounted briefly after it ends so it can fade out instead of vanishing.
+  const idleP = usePresence(phase === "idle");
+  const waitP = usePresence(phase === "waiting");
+  const countP = usePresence(phase === "counting");
+  const celP = usePresence(phase === "celebrate", 600);
+  const inCount = phase === "counting" || countP.leaving;
+  const lv = (p) => (p.leaving ? " leave" : "");
+
   const count = secs;
-  const final = phase === "counting" && count <= fin;
+  const final = inCount && count <= fin;
   // the dial leaves its dock one second early so it arrives in the middle just as the finale starts
-  const centered = phase === "counting" && count <= fin + 1;
+  const centered = inCount && count <= fin + 1;
   const elapsed = seq - count;
 
   // Sounds: soft beeps that build, then the BBC-style pips and engine rumble.
@@ -189,13 +198,12 @@ export default function Counter({ config, preview = false, extraControls = null 
 
   // Fireworks begin once the rocket has left the screen.
   useEffect(() => {
-    setLifted(false);
-    if (phase !== "celebrate") return;
-    const t = setTimeout(() => setLifted(true), lift);
+    if (phase === "celebrate") setLifted(false);
+    const t = setTimeout(() => setLifted(phase === "celebrate"), phase === "celebrate" ? lift : 650);
     return () => clearTimeout(t);
   }, [phase, lift]);
 
-  const progress = phase === "counting" ? Math.min(1, elapsed / Math.max(1, seq - 1)) : 0;
+  const progress = inCount ? Math.min(1, elapsed / Math.max(1, seq - 1)) : 0;
   const status = final ? config.statusIgnition : elapsed < (seq - fin) / 2 ? config.statusCheck : config.statusFuel;
   const longNumber = count > 99;
 
@@ -242,6 +250,7 @@ export default function Counter({ config, preview = false, extraControls = null 
         colors={colors}
         dark={theme === "dark"}
       />
+      <div className="sky" />
       <div className="controls">
         {extraControls}
         <button
@@ -262,8 +271,8 @@ export default function Counter({ config, preview = false, extraControls = null 
       <div className="bg-blob blob-b" />
       <div className="bg-blob blob-c" />
 
-      {phase === "idle" && (
-        <section className="center intro glass-card" key="idle">
+      {idleP.mounted && (
+        <section className={`center intro glass-card${lv(idleP)}`} key="idle">
           {logo}
           <p className="eyebrow">{ended ? "This countdown has ended" : config.eyebrow}</p>
           <h1 className="title">{config.title}</h1>
@@ -275,8 +284,8 @@ export default function Counter({ config, preview = false, extraControls = null 
         </section>
       )}
 
-      {phase === "waiting" && (
-        <section className="center waiting glass-card" key="waiting">
+      {waitP.mounted && (
+        <section className={`center waiting glass-card${lv(waitP)}`} key="waiting">
           {logo}
           <p className="eyebrow">{config.eyebrow}</p>
           <h1 className="title">{config.title}</h1>
@@ -293,12 +302,12 @@ export default function Counter({ config, preview = false, extraControls = null 
         </section>
       )}
 
-      {phase === "counting" && (
+      {countP.mounted && (
         <>
-          {final && fx.glow && <div className="edge-glow" key={`g${count}`} />}
-          <p className="eyebrow pill top-pill">{final ? `${config.title} ${config.launchLabel}` : config.title}</p>
+          {final && fx.glow && <div className={`edge-glow${lv(countP)}`} key={`g${count}`} />}
+          <p className={`eyebrow pill top-pill${lv(countP)}`}>{final ? `${config.title} ${config.launchLabel}` : config.title}</p>
 
-          <div className={`dial ${centered ? "center-dial" : "docked"}`}>
+          <div className={`dial ${centered ? "center-dial" : "docked"}${lv(countP)}`}>
             <div className="ring-glass" />
             <svg className="ring" viewBox="0 0 440 440">
               <defs>
@@ -325,7 +334,7 @@ export default function Counter({ config, preview = false, extraControls = null 
             </span>
           </div>
 
-          <div className="hud glass-card" key="hud">
+          <div className={`hud glass-card${lv(countP)}`} key="hud">
             <div className="hud-row">
               <span className="hud-status">
                 <i className="hud-dot" />
@@ -345,8 +354,8 @@ export default function Counter({ config, preview = false, extraControls = null 
         </>
       )}
 
-      {phase === "celebrate" && (
-        <section className="center celebrate" key="celebrate" style={{ "--lift": `${lift / 1000}s` }}>
+      {celP.mounted && (
+        <section className={`center celebrate${lv(celP)}`} key="celebrate" style={{ "--lift": `${lift / 1000}s` }}>
           {fx.rocket && (
             <div className="liftoff" aria-hidden="true">
               <div className="smoke" />

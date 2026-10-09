@@ -14,9 +14,14 @@ export const PALETTES = [
   { name: "Aurora", colors: ["#4f8cff", "#22d3a5", "#94a3b8"] },
   { name: "Sunset", colors: ["#ff6b6b", "#ffb347", "#a78bfa"] },
   { name: "Royal", colors: ["#7c3aed", "#f472b6", "#94a3b8"] },
+  { name: "Ocean", colors: ["#0ea5e9", "#14b8a6", "#a5b4fc"] },
+  { name: "Candy", colors: ["#ec4899", "#8b5cf6", "#fbbf24"] },
+  { name: "Neon", colors: ["#00f5d4", "#f15bb5", "#fee440"] },
+  { name: "Lava", colors: ["#ef4444", "#f97316", "#fde047"] },
   { name: "Forest", colors: ["#16a34a", "#facc15", "#94a3b8"] },
-  { name: "Sky & Lime", colors: ["#26a9e0", "#8bc53f", "#929497"] },
+  { name: "Mint", colors: ["#10b981", "#06b6d4", "#a3e635"] },
   { name: "Midnight Gold", colors: ["#f5c542", "#3b82f6", "#9ca3af"] },
+  { name: "Graphite", colors: ["#475569", "#38bdf8", "#94a3b8"] },
 ];
 
 export const DEFAULTS = {
@@ -191,4 +196,26 @@ export function rgba(h, a) {
 export function tint(h, t) {
   const [r, g, b] = hexToRgb(h).map((v) => Math.round(v + (255 - v) * t));
   return `#${[r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("")}`;
+}
+
+// A fresh, good-looking palette: a bright main colour, a partner from across the colour wheel,
+// and a soft muted accent. Fixed saturation/lightness keep every result readable.
+function hslToHex(h, s, l) {
+  h = ((h % 360) + 360) % 360;
+  s /= 100;
+  l /= 100;
+  const k = (n) => (n + h / 30) % 12;
+  const a = s * Math.min(l, 1 - l);
+  const f = (n) => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+  return `#${[f(0), f(8), f(4)].map((v) => Math.round(v * 255).toString(16).padStart(2, "0")).join("")}`;
+}
+
+export function randomPalette() {
+  const h = Math.random() * 360;
+  const partner = h + 110 + Math.random() * 100; // roughly complementary
+  return {
+    primary: hslToHex(h, 78, 58),
+    secondary: hslToHex(partner, 72, 56),
+    accent: hslToHex(h + 20, 22, 62),
+  };
 }
